@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 15s  
+
+scrape_configs:
+  - job_name: 'ray'
+    scrape_interval: 1s
+    http_sd_configs:
+    - url: 'http://ray-head:8265/api/prometheus/sd'
+      refresh_interval: 1s
+
+  - job_name: 'spark-master'
+    scrape_interval: 1s
+    metrics_path: /metrics/master/prometheus/
+    static_configs:
+      - targets:
+          - 'spark-master:8080'
+
+  - job_name: 'spark-workers'
+    scrape_interval: 1s
+    metrics_path: /metrics/prometheus/
+    static_configs:
+      - targets:
+          - 'spark-worker-1:8081'
+          - 'spark-worker-2:8082'
+          - 'spark-worker-3:8083'
+
+
+
+# send POST request to reload config
+# curl -X POST http://server.ishirai.com:3001/-/reload

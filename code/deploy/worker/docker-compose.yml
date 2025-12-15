@@ -1,0 +1,67 @@
+name: bigdata_worker
+
+services:
+  spark-worker:
+    image: spark:4.0.1-scala2.13-java21-python3-ubuntu
+    user: root
+    container_name: bigdata_spark_worker_${NAME}
+    hostname: spark-worker-${NAME}
+    restart: unless-stopped
+    networks:
+      - bigdata
+    ports:
+      - "8081:8081"
+      - "7078:7078"
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_WORKER_PORT=7078
+      - SPARK_WORKER_WEBUI_PORT=8081
+      - SPARK_WORKER_OPTS=-Dspark.worker.idPattern=worker-${NAME}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_URL=${MINIO_URL}
+    volumes:
+      - ./assets/spark/conf/metrics.properties:/opt/spark/conf/metrics.properties
+      - ./assets/spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./assets/spark/sbin/start-daemon.sh:/opt/spark/sbin/spark-daemon.sh
+      - ./assets/spark/jars:/ext_jars:ro
+      - ./data/spark/logs:/opt/spark/logs
+    command: >
+      bash -c "rm -rf /opt/spark/logs/* && cp /ext_jars/* /opt/spark/jars/ && chmod a+x /opt/spark/sbin/spark-daemon.sh && /opt/spark/sbin/start-worker.sh --properties-file /opt/spark/conf/metrics.properties spark://spark-master:7077 && tail -f /dev/null"
+    shm_size: '16gb'
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+
+  ray-worker:
+    image: rayproject/ray:2.51.1-py311-cpu
+    user: root
+    container_name: bigdata_ray_worker_${NAME}
+    hostname: ray-worker-${NAME}
+    restart: unless-stopped
+    networks:
+      - bigdata
+    environment:
+      - RAY_PROFILING=1
+      - RAY_task_events_report_interval_ms=0
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_URL=${MINIO_URL}
+    volumes:
+      - ./data/ray/tmp:/ray_tmp
+    ports:
+      - "8266:8265"
+    command: >
+      ray start --address='ray-head:6379' --dashboard-host 0.0.0.0 --node-ip-address=ray-worker-${NAME} --block
+    shm_size: '16gb'
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+
+networks:
+  bigdata:
+    external: true
