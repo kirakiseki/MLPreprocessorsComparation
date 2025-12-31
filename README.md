@@ -196,6 +196,11 @@ S3 存储 MinIO： `minio/minio:RELEASE.2025-09-07T16-13-09Z` / `minio/mc:RELEAS
 
 ![Ray Submit](./assets/ray-submit.png)
 
+收集到的数据除写入本地路径外，会额外写入MinIO存储桶`bigdata-spark-logs`和`bigdata-ray-logs`中，便于后续实验结果的整理和分析。
+
+下面为实验一中收集到的部分性能数据示例：
+![Ray Perf](./assets/ray-perf.png)
+
 #### 实验二
 
 实验二选择了特征编码中的计数向量化（Count Vectorization）作为对比对象。计数向量化是文本数据处理中常用的技术，能够将文本转换为数值特征，便于后续的机器学习任务。
