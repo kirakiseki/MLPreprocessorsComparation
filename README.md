@@ -46,11 +46,11 @@
 
 算子选择：
 
-| 实验序号 | 预处理算子     | Spark MLlib                                                                 | Ray Data                                                                                           |实验动机
+| 实验序号 | 预处理算子    |实验动机 | Spark MLlib                                                                 | Ray Data                                                                                           |
 |---|---|---|---|---|
-| 1        | 标准化         | `pyspark.ml.feature.StandardScaler`                                         | `ray.data.preprocessors.StandardScaler`                                                            |全局统计量依赖
-| 2        | 特征编码       | `pyspark.ml.feature.CountVectorizer`                                        | `ray.data.preprocessors.CountVectorizer`                                                           |高维稀疏数据处理
-| 3        | 分位数         | `pyspark.sql.DataFrame.approxQuantile`, `pyspark.ml.feature.QuantileDiscretizer` | `ray.data.aggregate.ApproximateQuantile`, `ray.data.preprocessors.CustomKBinsDiscretizer`          |近似计算与分桶
+| 1        | 标准化         |全局统计量依赖| `pyspark.ml.feature.StandardScaler`                                         | `ray.data.preprocessors.StandardScaler`                                                            |
+| 2        | 特征编码       |高维稀疏数据处理| `pyspark.ml.feature.CountVectorizer`                                        | `ray.data.preprocessors.CountVectorizer`                                                           |
+| 3        | 分位数         |近似计算与分桶| `pyspark.sql.DataFrame.approxQuantile`, `pyspark.ml.feature.QuantileDiscretizer` | `ray.data.aggregate.ApproximateQuantile`, `ray.data.preprocessors.CustomKBinsDiscretizer`          |
 
 ## 实验
 
@@ -159,7 +159,7 @@ S3 存储 MinIO： `minio/minio:RELEASE.2025-09-07T16-13-09Z` / `minio/mc:RELEAS
 
 ![Spark Job](./assets/spark-job.png)
 
-<img src="./assets/spark-dag.png" alt="Spark DAG" style="zoom:30%;" />
+<img src="./assets/spark-dag.png" alt="Spark DAG" width="20%" />
 
 
 搭建Ray集群，可以通过Ray Dashboard查看集群状态和任务执行情况。
@@ -189,6 +189,12 @@ S3 存储 MinIO： `minio/minio:RELEASE.2025-09-07T16-13-09Z` / `minio/mc:RELEAS
 **标准化算子的实现依赖于对整个数据集的全局统计量（均值和标准差）的计算，这使其成为评估分布式计算框架在处理大规模数据时性能的关键指标。**
 
 实验一中对数据进行了标准化处理，分别使用Spark MLlib的`pyspark.ml.feature.StandardScaler`和Ray Data的`ray.data.preprocessors.StandardScaler`对不同规模的Airline数据集进行了标准化处理，并记录了每次实验的性能指标。
+
+每次提交实验任务时，均通过Prometheus收集CPU和内存利用率数据，通过Spark Eventlog和Ray Dashboard收集任务执行时间和资源使用情况。Spark任务使用PySpark编写，进入Spark master容器中使用`spark-submit`提交；Ray任务使用Ray Python API编写，进入Ray head节点容器中使用`ray job submit`提交。提交任务后通过`tee`命令将标准输出和错误输出重定向到日志文件中，便于后续分析。
+
+![Spark Submit](./assets/spark-submit.png)
+
+![Ray Submit](./assets/ray-submit.png)
 
 #### 实验二
 
