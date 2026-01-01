@@ -1,0 +1,161 @@
+name: gdx_bigdata_spark
+
+services:
+  spark-master:
+    image: spark:deps-4.0.1-scala2.13-java21-python3-ubuntu
+    container_name: gdx_bigdata_spark_master
+    hostname: spark-master
+    restart: unless-stopped
+    user: root
+    networks:
+      - gdx_bigdata
+    environment:
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER_WEBUI_PORT=8080
+      - SPARK_MASTER_OPTS=-Dspark.dead.worker.persistence=2
+    volumes:
+      - ./assets/spark/conf/metrics.properties:/opt/spark/conf/metrics.properties
+      - ./assets/spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./assets/spark/jars:/ext_jars:ro
+      - ./data/spark/logs:/opt/spark/logs
+      - ../../experiments:/opt/spark/work-dir
+    ports:
+      - "8080:8080"   
+      - "7077:7077"  
+      - "4040:4040"
+    command: >
+      bash -c "rm -rf /opt/spark/logs/* && cp /ext_jars/* /opt/spark/jars/ && /opt/spark/sbin/start-master.sh --properties-file /opt/spark/conf/metrics.properties --properties-file /opt/spark/conf/spark-defaults.conf && tail -f /dev/null"
+    shm_size: '32gb'
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 32G
+
+  spark-history-server:
+    image: spark:deps-4.0.1-scala2.13-java21-python3-ubuntu
+    container_name: gdx_bigdata_spark_history_server
+    hostname: spark-history-server
+    restart: unless-stopped
+    user: root
+    networks:
+      - gdx_bigdata
+    environment:
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER_WEBUI_PORT=8080
+      - SPARK_MASTER_OPTS=-Dspark.dead.worker.persistence=2
+    volumes:
+      - ./assets/spark/conf/metrics.properties:/opt/spark/conf/metrics.properties
+      - ./assets/spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./assets/spark/jars:/ext_jars:ro
+      - ./data/spark_history_server/logs:/opt/spark/logs
+      - ../../experiments:/opt/spark/work-dir
+    ports:
+      - "18080:18080"
+    command: >
+      bash -c "rm -rf /opt/spark/logs/* && cp /ext_jars/* /opt/spark/jars/ && /opt/spark/sbin/start-history-server.sh --properties-file /opt/spark/conf/metrics.properties --properties-file /opt/spark/conf/spark-defaults.conf && tail -f /dev/null"
+    shm_size: '32gb'
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 32G
+
+  spark-worker-1:
+    image: spark:deps-4.0.1-scala2.13-java21-python3-ubuntu
+    user: root
+    container_name: gdx_bigdata_spark_worker_1
+    hostname: spark-worker-1
+    restart: unless-stopped
+    networks:
+      - gdx_bigdata
+    ports:
+      - "8081:8081"
+      - "7078:7078"
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_WORKER_PORT=7078
+      - SPARK_WORKER_WEBUI_PORT=8081
+      - SPARK_WORKER_OPTS=-Dspark.worker.idPattern=worker-1
+    volumes:
+      - ./assets/spark/conf/metrics.properties:/opt/spark/conf/metrics.properties
+      - ./assets/spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./assets/spark/sbin/start-daemon.sh:/opt/spark/sbin/spark-daemon.sh
+      - ./assets/spark/jars:/ext_jars:ro
+      - ./data/spark_1/logs:/opt/spark/logs
+    command: >
+      bash -c "rm -rf /opt/spark/logs/* && cp /ext_jars/* /opt/spark/jars/ && chmod a+x /opt/spark/sbin/spark-daemon.sh && /opt/spark/sbin/start-worker.sh --properties-file /opt/spark/conf/metrics.properties --properties-file /opt/spark/conf/spark-defaults.conf spark://spark-master:7077 && tail -f /dev/null"
+    shm_size: '32gb'
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 32G
+
+  spark-worker-2:
+    image: spark:deps-4.0.1-scala2.13-java21-python3-ubuntu
+    user: root
+    container_name: gdx_bigdata_spark_worker_2
+    hostname: spark-worker-2
+    restart: unless-stopped
+    networks:
+      - gdx_bigdata
+    ports:
+      - "8082:8082"
+      - "7079:7079"
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_WORKER_PORT=7079
+      - SPARK_WORKER_WEBUI_PORT=8082
+      - SPARK_WORKER_OPTS=-Dspark.worker.idPattern=worker-2
+    volumes:
+      - ./assets/spark/conf/metrics.properties:/opt/spark/conf/metrics.properties
+      - ./assets/spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./assets/spark/sbin/start-daemon.sh:/opt/spark/sbin/spark-daemon.sh
+      - ./assets/spark/jars:/ext_jars:ro
+      - ./data/spark_2/logs:/opt/spark/logs
+    command: >
+      bash -c "rm -rf /opt/spark/logs/* && cp /ext_jars/* /opt/spark/jars/ && chmod a+x /opt/spark/sbin/spark-daemon.sh && /opt/spark/sbin/start-worker.sh --properties-file /opt/spark/conf/metrics.properties --properties-file /opt/spark/conf/spark-defaults.conf spark://spark-master:7077 && tail -f /dev/null"
+    shm_size: '32gb'
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 32G
+
+  spark-worker-3:
+    image: spark:deps-4.0.1-scala2.13-java21-python3-ubuntu
+    user: root
+    container_name: gdx_bigdata_spark_worker_3
+    hostname: spark-worker-3
+    restart: unless-stopped
+    networks:
+      - gdx_bigdata
+    ports:
+      - "8083:8083"
+      - "7080:7080"
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_WORKER_PORT=7080
+      - SPARK_WORKER_WEBUI_PORT=8083
+      - SPARK_WORKER_OPTS=-Dspark.worker.idPattern=worker-3
+    volumes:
+      - ./assets/spark/conf/metrics.properties:/opt/spark/conf/metrics.properties
+      - ./assets/spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./assets/spark/sbin/start-daemon.sh:/opt/spark/sbin/spark-daemon.sh
+      - ./assets/spark/jars:/ext_jars:ro
+      - ./data/spark_3/logs:/opt/spark/logs
+    command: >
+      bash -c "rm -rf /opt/spark/logs/* && cp /ext_jars/* /opt/spark/jars/ && chmod a+x /opt/spark/sbin/spark-daemon.sh && /opt/spark/sbin/start-worker.sh --properties-file /opt/spark/conf/metrics.properties --properties-file /opt/spark/conf/spark-defaults.conf spark://spark-master:7077 && tail -f /dev/null"
+    shm_size: '32gb'
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 32G
+
+networks:
+  gdx_bigdata:
+    external: true

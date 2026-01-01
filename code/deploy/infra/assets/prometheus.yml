@@ -27,4 +27,4 @@ scrape_configs:
 
 
 # send POST request to reload config
-# curl -X POST http://server.ishirai.com:3001/-/reload
+# curl -X POST http://localhost:3001/-/reload

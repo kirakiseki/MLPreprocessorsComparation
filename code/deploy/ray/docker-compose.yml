@@ -1,0 +1,92 @@
+name: gdx_bigdata_ray
+
+services:
+  ray-head:
+    image: rayproject/ray:2.51.1-py311-cpu
+    container_name: gdx_bigdata_ray_head
+    hostname: ray-head
+    restart: unless-stopped
+    user: root
+    networks:
+      - gdx_bigdata
+    volumes:
+      - ./data/ray/tmp:/ray_tmp
+      - ../../experiments:/home/ray/experiments
+    ports:
+      - "8265:8265" 
+      - "6379:6379" 
+    command: >
+      ray start --head --port=6379 --temp-dir /ray_tmp --dashboard-host 0.0.0.0 --node-ip-address ray-head --block 
+    shm_size: '32gb'
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 32G
+
+  ray-worker-1:
+    image: rayproject/ray:2.51.1-py311-cpu
+    user: root
+    container_name: gdx_bigdata_ray_worker_1
+    hostname: ray-worker-1
+    restart: unless-stopped
+    networks:
+      - gdx_bigdata
+    volumes:
+      - ./data/ray_1/tmp:/ray_tmp
+    ports:
+      - "8266:8265"
+    command: >
+      ray start --address='ray-head:6379' --dashboard-host 0.0.0.0 --node-ip-address=ray-worker-1 --block
+    shm_size: '32gb'
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 32G
+
+  ray-worker-2:
+    image: rayproject/ray:2.51.1-py311-cpu
+    user: root
+    container_name: gdx_bigdata_ray_worker_2
+    hostname: ray-worker-2
+    restart: unless-stopped
+    networks:
+      - gdx_bigdata
+    volumes:
+      - ./data/ray_2/tmp:/ray_tmp
+    ports:
+      - "8267:8265"
+    command: >
+      ray start --address='ray-head:6379' --dashboard-host 0.0.0.0 --node-ip-address=ray-worker-2 --block
+    shm_size: '32gb'
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 32G
+
+  ray-worker-3:
+    image: rayproject/ray:2.51.1-py311-cpu
+    user: root
+    container_name: gdx_bigdata_ray_worker_3
+    hostname: ray-worker-3
+    restart: unless-stopped
+    networks:
+      - gdx_bigdata
+    volumes:
+      - ./data/ray_3/tmp:/ray_tmp
+    ports:
+      - "8268:8265"
+    command: >
+      ray start --address='ray-head:6379' --dashboard-host 0.0.0.0 --node-ip-address=ray-worker-3 --block
+    shm_size: '32gb'
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 32G
+
+networks:
+  gdx_bigdata:
+    external: true
