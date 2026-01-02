@@ -259,7 +259,7 @@ S3 存储 MinIO： `minio/minio:RELEASE.2025-09-07T16-13-09Z` / `minio/mc:RELEAS
 
 ##### 1.3 Ray 组件物理内存
 
-![Figure_3](D:\a研究生涯\研一\研一秋\大规模数据处理系统\Exp1\Figure_3.png)
+![Figure_3](./assets/Figure_3.png)
 
 图表解读：
 
